@@ -1,35 +1,62 @@
-#!/bin/bash
+# הדפסת הודעה על התחלת התהליך
+echo "Starting the deployment process..."
 
-# Check for changes
-git status -s
-
-# If there are changes, stage them, commit, and push
-if [ $? -eq 0 ]; then
-  git add .
-  git commit -m "Automated commit"
-  git push origin main
+# שלב 1: בדיקת סטטוס Git
+echo "Checking Git status..."  
+git status   
+if [ $? -ne 0 ]; then
+    echo "Error: git status failed!"  
+    exit 1
 fi
 
-npm install
-npm run build
-
-
-gsutil cp -r build/ gs://your-bucket-name
-
-#!/bin/bash
-
-# ... (שאר הקוד שלך)
-
-# טיפול בשגיאות ולוגים
-function handle_error() {
-  error_message="$1"
-  echo "$(date +"%Y-%m-%d %H:%M:%S") - ERROR: $error_message" >> error.log
-  exit 1
-}
-
-# דוגמה לשימוש בפונקציה:
-if ! git push origin main; then
-  handle_error "Failed to push to GitHub"
+# שלב 2: הוספת כל השינויים (סטייג'ינג)
+echo "Staging all changes..."    
+git add .    
+if [ $? -ne 0 ]; then
+    echo "Error: git add failed!"   
+    exit 1
 fi
 
-chmod +x your_script.sh
+# שלב 3: יצירת Commit עם הודעת אוטומטית
+commit_message="Automated commit message"
+echo "Committing changes with message: $commit_message"    
+git commit -m "$commit_message"    
+if [ $? -ne 0 ]; then
+    echo "Error: nothing in commit!"   
+    exit 1
+fi
+
+# שלב 4: Push ל-GitHub
+echo "Pushing changes to GitHub..."    
+git push origin main    
+if [ $? -ne 0 ]; then
+    echo "Error: git push failed!"   
+    exit 1
+fi
+
+# שלב 5: התקנת תלותים
+echo "Installing dependencies..."    
+npm install    
+if [ $? -ne 0 ]; then
+    echo "Error: npm install failed!"   
+    exit 1
+fi
+
+# שלב 6: בניית האפליקציה
+echo "Building the app..."    
+npm run build   
+if [ $? -ne 0 ]; then
+    echo "Error: npm run build failed!"  
+    exit 1
+fi
+
+# שלב 7: העלאת קבצים ל-GCS
+echo "Uploading build to Google Cloud Storage (GCS)..."   
+gcloud storage  cp -r ./build/* gs://hadassah-react-app-bucket   
+if [ $? -ne 0 ]; then
+    echo "Error: gcloud storage upload failed!"  
+    exit 1
+fi
+
+# הודעה על סיום ההפעלה
+echo "Deployment process completed successfully!"
