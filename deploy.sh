@@ -60,3 +60,5 @@ fi
 
 # הודעה על סיום ההפעלה
 echo "Deployment process completed successfully!"
+
+chmod +x deploy.sh
